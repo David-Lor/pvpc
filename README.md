@@ -1,2 +1,3 @@
-# generic-template
-My custom template for generic repositories
+# pvpc
+
+Repositorio con los precios PVPC, actualizados diariamente mediante Github Actions.

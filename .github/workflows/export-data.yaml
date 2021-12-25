@@ -1,0 +1,94 @@
+name: "Export PVPC data"
+on:
+  workflow_dispatch:
+    inputs:
+      push:
+        description: "Push data? (yes/no)"
+        required: true
+        default: "no"
+      day:
+        description: "Day to get (today/tomorrow, or date with format YYYY-MM-DD)"
+        required: true
+        default: "today"
+  schedule:
+    - cron: "0 20 * * *"  # 20:00 UTC / 21:00h CET / 22:00 CEST
+
+jobs:
+  export:
+    name: "Export PVPC data"
+    runs-on: ubuntu-latest
+    env:
+      # Relative paths to directories, without prefixes nor suffixes.
+      # Current directory is repository root after clone.
+      PVPC_LIB_PATH: "python-pvpc"
+      PVPC_OUTPUT_BASE_PATH: "data"
+      PVPC_OUTPUT_PCB_PATH: "data/pcb/{year}/{month}/{day}.json"
+      PVPC_OUTPUT_CM_PATH: "data/cm/{year}/{month}/{day}.json"
+
+    steps:
+      # Setup local
+        - name: "Checkout"
+          uses: actions/checkout@v2
+          with:
+            fetch-depth: 1
+        - name: "Checkout python-pvpc"
+          uses: actions/checkout@v2
+          with:
+            repository: David-Lor/python-pvpc
+            path: ${{ env.PVPC_LIB_PATH }}
+            fetch-depth: 1
+        - name: "Setup Python"
+          uses: actions/setup-python@master
+          with:
+            python-version: "3.9"
+            architecture: "x64"
+        - name: "Hash Python requirements file"
+          working-directory: ${{ env.PVPC_LIB_PATH }}
+          run: |-
+            checksum=$(printf $(sha256sum requirements.txt))
+            echo "PVPC_LIB_REQUIREMENTS_CHECKSUM=$checksum" >> $GITHUB_ENV
+        - name: "Cache Python packages"
+          uses: actions/cache@v2
+          with:
+            key: "cache-python-exportdata-${{ env.PVPC_LIB_REQUIREMENTS_CHECKSUM }}"
+            path: |
+              ~/.cache/pip
+              ~/.local/lib/python3.8/site-packages
+        - name: "Install Python requirements"
+          working-directory: ${{ env.PVPC_LIB_PATH }}
+          run: |
+            pip install -r requirements.txt
+        - name: "Set push flag"
+          if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'yes' }}
+          run: |
+            echo "flagPush=true" >> $GITHUB_ENV
+        - name: "Set day to fetch"
+          # If input.day not defined, set "tomorrow" by default
+          run: |
+            day="${{ github.event.inputs.day }}"
+            test "$day" || day="tomorrow"
+            echo "PVPC_DATE=$day" >> $GITHUB_ENV
+
+      # Export data
+        - name: "Export data"
+          run: |
+            PYTHONPATH="$PYTHONPATH:$(pwd)/${{ env.PVPC_LIB_PATH }}" python scripts/export_pvpc.py
+        - name: "List changes"
+          run: |
+            echo "Output PVPC data for Peninsula/Canarias/Baleares:"
+            cat "${{ env.PVPC_OUTPUT_PCB_PATH_FORMATTED }}"
+            echo ""
+            echo "Output PVPC for Ceuta/Melilla:"
+            cat "${{ env.PVPC_OUTPUT_CM_PATH_FORMATTED }}"
+
+      # Commit data
+        - name: "Commit exported data"
+          if: ${{ env.flagPush == 'true' }}
+          uses: EndBug/add-and-commit@v7
+          with:
+            add: "${{ env.PVPC_OUTPUT_BASE_PATH }}/*"
+            push: true
+            message: |
+              Export PVPC data
+              
+              PVPC data for ${{ env.PVPC_DATE_FORMATTED }}
