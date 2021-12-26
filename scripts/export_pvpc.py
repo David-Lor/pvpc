@@ -1,7 +1,6 @@
 import pydantic
 import datetime
 import pathlib
-import subprocess
 import json
 import os
 import sys
@@ -34,7 +33,7 @@ class Settings(pydantic.BaseSettings):
             date = datetime.date.today()
         elif date == Const.TOMORROW:
             date = datetime.date.today() + datetime.timedelta(days=1)
-        else:
+        elif isinstance(date, str):
             date = datetime.date.fromisoformat(date)
         d["date"] = date
 
@@ -99,8 +98,11 @@ def _export_json(day: datetime.date, location_data: pvpc.PVPCDay.PVPCDayData.PVP
     _write_file(output_path, js)
 
 
-def main():
-    settings = Settings()
+def main(date=None):
+    settings_kwargs = dict()
+    if date is not None:
+        settings_kwargs["date"] = date
+    settings = Settings(**settings_kwargs)
     settings.export_github_env_variables()
 
     print(f"Fetching PVPC data for {settings.date.isoformat()}...")
