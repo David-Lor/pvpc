@@ -44,9 +44,8 @@ jobs:
           with:
             python-version: "3.9"
             architecture: "x64"
-        # TODO hash & cache with plotly and pandas
         - name: "Hash Python requirements file"
-          working-directory: ${{ env.PVPC_LIB_PATH }}
+          working-directory: scripts
           run: |-
             checksum=$(printf $(sha256sum requirements.txt))
             echo "PVPC_LIB_REQUIREMENTS_CHECKSUM=$checksum" >> $GITHUB_ENV
@@ -58,10 +57,9 @@ jobs:
               ~/.cache/pip
               ~/.local/lib/python3.8/site-packages
         - name: "Install Python requirements"
-          working-directory: ${{ env.PVPC_LIB_PATH }}
+          working-directory: scripts
           run: |
             pip install -r requirements.txt
-            pip install plotly pandas
         - name: "Set push flag"
           if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'yes' }}
           run: |

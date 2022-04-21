@@ -1,0 +1,8 @@
+# python-pvpc
+requests==2.27.1
+pydantic==1.9.0
+
+# graph export
+plotly==5.7.0
+pandas==1.4.2
+kaleido==0.2.1
