@@ -16,13 +16,17 @@ class Const:
     TOMORROW = "tomorrow"
     ENV_OUTPUT_DATE_FORMATTED = "PVPC_DATE_FORMATTED"
     ENV_OUTPUT_PCB_PATH_FORMATTED = "PVPC_OUTPUT_PCB_PATH_FORMATTED"
+    ENV_OUTPUT_PCB_GRAPH_PATH_FORMATTED = "PVPC_OUTPUT_PCB_GRAPH_PATH_FORMATTED"
     ENV_OUTPUT_CM_PATH_FORMATTED = "PVPC_OUTPUT_CM_PATH_FORMATTED"
+    ENV_OUTPUT_CM_GRAPH_PATH_FORMATTED = "PVPC_OUTPUT_CM_GRAPH_PATH_FORMATTED"
 
 
 class Settings(pydantic.BaseSettings):
     # Paths must contain placeholders for year, month, date: {year}, {month}, {date}
     output_pcb_path: str
+    output_pcb_graph_path: str
     output_cm_path: str
+    output_cm_graph_path: str
     date: datetime.date
 
     @pydantic.root_validator(pre=True)
@@ -46,7 +50,9 @@ class Settings(pydantic.BaseSettings):
     def export_github_env_variables(self):
         _export_github_env(Const.ENV_OUTPUT_DATE_FORMATTED, self.date.isoformat())
         _export_github_env(Const.ENV_OUTPUT_PCB_PATH_FORMATTED, self.output_pcb_path)
+        _export_github_env(Const.ENV_OUTPUT_PCB_GRAPH_PATH_FORMATTED, self.output_pcb_graph_path)
         _export_github_env(Const.ENV_OUTPUT_CM_PATH_FORMATTED, self.output_cm_path)
+        _export_github_env(Const.ENV_OUTPUT_CM_GRAPH_PATH_FORMATTED, self.output_cm_graph_path)
 
     class Config:
         env_prefix = "PVPC_"
@@ -98,6 +104,29 @@ def _export_json(day: datetime.date, location_data: pvpc.PVPCDay.PVPCDayData.PVP
     _write_file(output_path, js)
 
 
+def _export_graph(day: datetime.date, location_data: pvpc.PVPCDay.PVPCDayData.PVPCDayByLocation, output_filename: str):
+    import plotly.graph_objects as go
+    import pandas as pd
+
+    dataframe = dict(date=[], value=[])
+    for hour, cost in location_data.hours.items():
+        timestamp = f"{day.isoformat()}T{str(hour).zfill(2)}:00:00"
+        dataframe["date"].append(timestamp)
+        dataframe["value"].append(cost)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=dataframe["date"],
+        y=dataframe["value"],
+        mode="lines+markers+text",
+        name="Coste €/kWh",
+        line=dict(color="blue"),
+        text=[f"{str(v).zfill(2)}h" for v in dataframe["value"]],
+        textposition="top center",
+    ))
+    fig.write_image(output_filename)
+
+
 def main(date=None):
     settings_kwargs = dict()
     if date is not None:
@@ -109,7 +138,9 @@ def main(date=None):
     data = pvpc.get_pvpc_day(settings.date)
 
     _export_json(settings.date, data.data.pcb, settings.output_pcb_path)
+    _export_graph(settings.date, data.data.pcb, settings.output_pcb_graph_path)
     _export_json(settings.date, data.data.cm, settings.output_cm_path)
+    _export_json(settings.date, data.data.cm, settings.output_cm_graph_path)
 
 
 if __name__ == '__main__':

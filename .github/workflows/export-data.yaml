@@ -23,7 +23,9 @@ jobs:
       PVPC_LIB_PATH: "python-pvpc"
       PVPC_OUTPUT_BASE_PATH: "data"
       PVPC_OUTPUT_PCB_PATH: "data/pcb/{year}/{month}/{day}.json"
+      PVPC_OUTPUT_PCB_GRAPH_PATH: "data/pcb/{year}/{month}/{day}.svg"
       PVPC_OUTPUT_CM_PATH: "data/cm/{year}/{month}/{day}.json"
+      PVPC_OUTPUT_CM_GRAPH_PATH: "data/cm/{year}/{month}/{day}.svg"
 
     steps:
       # Setup local
@@ -42,6 +44,7 @@ jobs:
           with:
             python-version: "3.9"
             architecture: "x64"
+        # TODO hash & cache with plotly and pandas
         - name: "Hash Python requirements file"
           working-directory: ${{ env.PVPC_LIB_PATH }}
           run: |-
@@ -58,6 +61,7 @@ jobs:
           working-directory: ${{ env.PVPC_LIB_PATH }}
           run: |
             pip install -r requirements.txt
+            pip install plotly pandas
         - name: "Set push flag"
           if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'yes' }}
           run: |
