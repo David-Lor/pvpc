@@ -124,7 +124,9 @@ def _export_graph(day: datetime.date, location_data: pvpc.PVPCDay.PVPCDayData.PV
         text=[f"{str(v).zfill(2)}h" for v in dataframe["value"]],
         textposition="top center",
     ))
-    fig.write_image(output_filename)
+
+    output_path = _format_path(output_filename, day)
+    fig.write_image(output_path)
 
 
 def main(date=None):
