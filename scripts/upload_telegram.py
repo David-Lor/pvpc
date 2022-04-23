@@ -65,7 +65,7 @@ def _format_telegram_message(data: PVPCOutput) -> str:
         hour = str(hour).zfill(2)
 
         emoji = _price_to_emoji(price)
-        price_str = str(price).ljust(7)  # adjust to 7 characters (0.12345)
+        price_str = str(price).ljust(7, "0")  # adjust to 7 characters, fill right with zeros (0.12345)
         line = f"{emoji}<code>{hour}h: {price_str} €/kWh</code>"
         prices_text_lines.append(line)
 
