@@ -3,9 +3,15 @@ on:
   workflow_dispatch:
     inputs:
       push:
-        description: "Push data? (yes/no)"
+        description: "Push data?"
+        type: boolean
         required: true
-        default: "no"
+        default: false
+      telegram:
+        description: "Publish data on Telegram?"
+        type: boolean
+        required: true
+        default: false
       day:
         description: "Day to get (today/tomorrow, or date with format YYYY-MM-DD)"
         required: true
@@ -28,17 +34,17 @@ jobs:
     steps:
       # Setup local
         - name: "Checkout"
-          uses: actions/checkout@v2
+          uses: actions/checkout@v3
           with:
             fetch-depth: 1
         - name: "Checkout python-pvpc"
-          uses: actions/checkout@v2
+          uses: actions/checkout@v3
           with:
             repository: David-Lor/python-pvpc
             path: ${{ env.PVPC_LIB_PATH }}
             fetch-depth: 1
         - name: "Setup Python"
-          uses: actions/setup-python@master
+          uses: actions/setup-python@v3
           with:
             python-version: "3.9"
             architecture: "x64"
@@ -59,20 +65,28 @@ jobs:
           run: |
             pip install -r requirements.txt
         - name: "Set push flag"
-          if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'yes' }}
+          if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'true' }}
           run: |
             echo "flagPush=true" >> $GITHUB_ENV
+        - name: "Set telegram flag"
+          if: ${{ github.event_name == 'schedule' || github.event.inputs.telegram == 'true' }}
+          run: |
+            echo "flagTelegram=true" >> $GITHUB_ENV
         - name: "Set day to fetch"
           # If input.day not defined, set "tomorrow" by default
           run: |
             day="${{ github.event.inputs.day }}"
             test "$day" || day="tomorrow"
             echo "PVPC_DATE=$day" >> $GITHUB_ENV
+        - name: "Extend Python path"
+          run: |
+            newpath="$PYTHONPATH:$(pwd)/${{ env.PVPC_LIB_PATH }}"
+            echo "PYTHONPATH=$newpath" >> $GITHUB_ENV
 
       # Export data
         - name: "Export data"
           run: |
-            PYTHONPATH="$PYTHONPATH:$(pwd)/${{ env.PVPC_LIB_PATH }}" python scripts/export_pvpc.py
+            python scripts/export_pvpc.py
         - name: "List changes"
           run: |
             echo "Output PVPC data for Peninsula/Canarias/Baleares:"
@@ -81,7 +95,7 @@ jobs:
             echo "Output PVPC for Ceuta/Melilla:"
             cat "${{ env.PVPC_OUTPUT_CM_PATH_FORMATTED }}"
 
-      # Commit data
+      # Commit & Push data
         - name: "Commit exported data"
           if: ${{ env.flagPush == 'true' }}
           uses: EndBug/add-and-commit@v7
@@ -92,3 +106,13 @@ jobs:
               Export PVPC data
               
               PVPC data for ${{ env.PVPC_DATE_FORMATTED }}
+
+      # Publish data on Telegram channels
+        - name: "Publish data on Telegram channel (pcb)"
+          if: ${{ env.flagTelegram == 'true' }}
+          env:
+            TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+            TELEGRAM_CHATID: ${{ secrets.TELEGRAM_CHATID_CHANNEL_PCB }}
+            DATA_PATH: ${{ env.PVPC_OUTPUT_PCB_PATH_FORMATTED }}
+          run: |
+            python scripts/upload_telegram.py

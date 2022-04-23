@@ -10,6 +10,8 @@ except ModuleNotFoundError:
     sys.path.append(os.path.join(os.path.dirname(__file__), os.pardir))
     import pvpc
 
+String = pydantic.constr(strip_whitespace=True, min_length=1)
+
 
 class Const:
     TODAY = "today"
@@ -21,8 +23,8 @@ class Const:
 
 class Settings(pydantic.BaseSettings):
     # Paths must contain placeholders for year, month, date: {year}, {month}, {date}
-    output_pcb_path: str
-    output_cm_path: str
+    output_pcb_path: String
+    output_cm_path: String
     date: datetime.date
 
     @pydantic.root_validator(pre=True)
