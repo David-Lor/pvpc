@@ -34,21 +34,24 @@ class Const:
         "noviembre",
         "diciembre"
     ]
+    prices_emojis = [
+        # from cheaper to more expensive; logic in _price_to_emoji()
+        "🔵",
+        "🟡",
+        "🟤"
+    ]
 
 
 def _read_file(path: str) -> PVPCOutput:
     return PVPCOutput.parse_file(path)
-    # with open(path, "r") as f:
-    #     js = json.load(f)
-    #     return PVPCOutput(**js)
 
 
 def _price_to_emoji(price: float) -> str:
     if price < 0.1:
-        return "😀"  # < 0,10 €/kWh
+        return Const.prices_emojis[0]  # < 0,10 €/kWh
     if price < 0.15:
-        return "😕"  # 0,10 ~ 0,15 €/kWh
-    return "😫"  # > 0,15 €/kWh
+        return Const.prices_emojis[1]  # 0,10 ~ 0,15 €/kWh
+    return Const.prices_emojis[2]  # > 0,15 €/kWh
 
 
 def _format_date_human(date: datetime.date) -> str:
@@ -62,7 +65,7 @@ def _format_telegram_message(data: PVPCOutput) -> str:
         hour = str(hour).zfill(2)
 
         emoji = _price_to_emoji(price)
-        line = f"{emoji}<code>{hour}h</code> ➡️ <code>{price} €/kWh</code>"
+        line = f"{emoji}<code>{hour}h: {price} €/kWh</code>"
         prices_text_lines.append(line)
 
     date_human = _format_date_human(data.day)
