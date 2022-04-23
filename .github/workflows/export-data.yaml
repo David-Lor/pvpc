@@ -68,10 +68,6 @@ jobs:
           if: ${{ github.event_name == 'schedule' || github.event.inputs.push == 'true' }}
           run: |
             echo "flagPush=true" >> $GITHUB_ENV
-        - name: "Set telegram flag"
-          if: ${{ github.event_name == 'schedule' || github.event.inputs.telegram == 'true' }}
-          run: |
-            echo "flagTelegram=true" >> $GITHUB_ENV
         - name: "Set day to fetch"
           # If input.day not defined, set "tomorrow" by default
           run: |
@@ -98,6 +94,7 @@ jobs:
       # Commit & Push data
         - name: "Commit exported data"
           if: ${{ env.flagPush == 'true' }}
+          id: commit
           uses: EndBug/add-and-commit@v7
           with:
             add: "${{ env.PVPC_OUTPUT_BASE_PATH }}/*"
@@ -108,6 +105,10 @@ jobs:
               PVPC data for ${{ env.PVPC_DATE_FORMATTED }}
 
       # Publish data on Telegram channels
+        - name: "Set telegram flag"
+          if: ${{ (github.event_name == 'schedule' && steps.commit.outputs.committed == 'true') || github.event.inputs.telegram == 'true' }}
+          run: |
+            echo "flagTelegram=true" >> $GITHUB_ENV
         - name: "Publish data on Telegram channel (pcb)"
           if: ${{ env.flagTelegram == 'true' }}
           env:
