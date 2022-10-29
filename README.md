@@ -2,6 +2,9 @@
 
 Repositorio con los precios PVPC, actualizados diariamente mediante Github Actions, utilizando la librería [python-pvpc](https://github.com/David-Lor/python-pvpc).
 
+[![@pvpc_pcb](https://img.shields.io/badge/Canal%20Telegram-@pvpc_pcb-blue?logo=telegram&style=plastic)](https://telegram.me/pvpc_pcb)
+Los precios PVPC (Península/Canarias/Baleares) se envían directamente al canal de Telegram [@pvpc_pcb](https://t.me/pvpc_pcb)
+
 ## Estructura
 
 Los archivos de precios se estructuran de la siguiente forma:
