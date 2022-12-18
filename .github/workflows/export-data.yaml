@@ -17,7 +17,7 @@ on:
         required: true
         default: "today"
   schedule:
-    - cron: "0,30 20,21 * * *"  # 20:00 UTC = 21:00h CET = 22:00 CEST
+    - cron: "0 20,21,22 * * *"  # 20:00 UTC = 21:00h CET = 22:00 CEST
 
 jobs:
   export:
