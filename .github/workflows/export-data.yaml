@@ -117,3 +117,22 @@ jobs:
             DATA_PATH: ${{ env.PVPC_OUTPUT_PCB_PATH_FORMATTED }}
           run: |
             python scripts/upload_telegram.py
+
+
+  healthcheck_ok:
+    name: "Push Healthcheck (OK)"
+    needs: [ export ]
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Call healthcheck webhook"
+        run: curl -silent "${{ secrets.HEALTHCHECK_URL }}?status=up&msg=OK"
+
+  healthcheck_ko:
+    name: "Push Healthcheck (KO)"
+    needs: [ export ]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Call healthcheck webhook"
+        run: curl -silent "${{ secrets.HEALTHCHECK_URL }}?status=down&msg=Failed"
