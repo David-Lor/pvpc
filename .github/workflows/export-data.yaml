@@ -34,15 +34,12 @@ jobs:
     steps:
       # Setup local
         - name: "Checkout"
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 1
+          uses: actions/checkout@v4
         - name: "Checkout python-pvpc"
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             repository: David-Lor/python-pvpc
             path: ${{ env.PVPC_LIB_PATH }}
-            fetch-depth: 1
         - name: "Setup Python"
           uses: actions/setup-python@v3
           with:
@@ -54,7 +51,7 @@ jobs:
             checksum=$(printf $(sha256sum requirements.txt))
             echo "PVPC_LIB_REQUIREMENTS_CHECKSUM=$checksum" >> $GITHUB_ENV
         - name: "Cache Python packages"
-          uses: actions/cache@v2
+          uses: actions/cache@v4
           with:
             key: "cache-python-exportdata-${{ env.PVPC_LIB_REQUIREMENTS_CHECKSUM }}"
             path: |
