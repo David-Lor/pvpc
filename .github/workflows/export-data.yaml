@@ -35,14 +35,14 @@ jobs:
     steps:
       # Setup local
         - name: "Checkout"
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
         - name: "Checkout python-pvpc"
-          uses: actions/checkout@v4
+          uses: actions/checkout@v7
           with:
             repository: David-Lor/python-pvpc
             path: ${{ env.PVPC_LIB_PATH }}
         - name: "Setup Python"
-          uses: actions/setup-python@v3
+          uses: actions/setup-python@v6
           with:
             python-version: "3.9"
             architecture: "x64"
@@ -52,12 +52,12 @@ jobs:
             checksum=$(printf $(sha256sum requirements.txt))
             echo "PVPC_LIB_REQUIREMENTS_CHECKSUM=$checksum" >> $GITHUB_ENV
         - name: "Cache Python packages"
-          uses: actions/cache@v4
+          uses: actions/cache@v6
           with:
             key: "cache-python-exportdata-${{ env.PVPC_LIB_REQUIREMENTS_CHECKSUM }}"
             path: |
               ~/.cache/pip
-              ~/.local/lib/python3.8/site-packages
+              ~/.local/lib/python3.9/site-packages
         - name: "Install Python requirements"
           working-directory: ${{ env.PVPC_LIB_PATH }}
           run: |
@@ -93,7 +93,7 @@ jobs:
         - name: "Commit exported data"
           if: ${{ env.flagPush == 'true' }}
           id: commit
-          uses: EndBug/add-and-commit@v7
+          uses: EndBug/add-and-commit@v10
           with:
             add: "${{ env.PVPC_OUTPUT_BASE_PATH }}/*"
             push: true
