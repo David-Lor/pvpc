@@ -12,6 +12,11 @@ on:
         type: boolean
         required: true
         default: false
+      telegram_force:
+        description: "Force publish data on Telegram?"
+        type: boolean
+        required: true
+        default: false
       day:
         description: "Day to get (today/tomorrow, or date with format YYYY-MM-DD)"
         required: true
@@ -104,7 +109,7 @@ jobs:
 
       # Publish data on Telegram channels
         - name: "Set telegram flag"
-          if: ${{ (github.event_name == 'schedule' && steps.commit.outputs.committed == 'true') || github.event.inputs.telegram == 'true' }}
+          if: ${{ ((github.event_name == 'schedule' || github.event.inputs.telegram == 'true') && steps.commit.outputs.committed == 'true') || github.event.inputs.telegram_force == 'true' }}
           run: |
             echo "flagTelegram=true" >> $GITHUB_ENV
         - name: "Publish data on Telegram channel (pcb)"
