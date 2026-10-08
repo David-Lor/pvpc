@@ -85,6 +85,18 @@ def _format_path(path: str, date: datetime.date) -> str:
     )
 
 
+def _validate_data(data: pvpc.PVPCDay):
+    """Ensure the day has not all hours costs equal to exactly zero.
+    """
+    data = data.dict()
+    for location_key, location_data in data["data"].items():
+        zero_values = [
+            value for value in location_data["hours"].values() if value == 0
+        ]
+        if len(zero_values) == 24:
+            raise Exception(f"Day with all costs to zero (in {location_key})")
+
+
 def _export_json(day: datetime.date, location_data: pvpc.PVPCDay.PVPCDayData.PVPCDayByLocation, output_filename: str):
     output = PVPCOutput(
         day=day,
@@ -110,6 +122,7 @@ def main(date=None):
     print(f"Fetching PVPC data for {settings.date.isoformat()}...")
     data = pvpc.get_pvpc_day(settings.date)
 
+    _validate_data(data)
     _export_json(settings.date, data.data.pcb, settings.output_pcb_path)
     _export_json(settings.date, data.data.cm, settings.output_cm_path)
 
