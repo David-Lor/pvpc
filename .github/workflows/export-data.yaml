@@ -130,12 +130,3 @@ jobs:
     steps:
       - name: "Call healthcheck webhook"
         run: curl -silent "${{ secrets.HEALTHCHECK_URL }}?status=up&msg=OK"
-
-  healthcheck_ko:
-    name: "Push Healthcheck (KO)"
-    needs: [ export ]
-    if: ${{ failure() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: "Call healthcheck webhook"
-        run: curl -silent "${{ secrets.HEALTHCHECK_URL }}?status=down&msg=Failed"
